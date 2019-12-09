@@ -17,7 +17,6 @@ def getDrvicesID(session):
         driver = webdriver.Chrome(executable_path=TickerConfig.CHROME_PATH)
         driver.get("https://www.12306.cn/index/index.html")
         time.sleep(10)
-
         for c in driver.get_cookies():
             cookie = dict()
             print()
@@ -27,9 +26,20 @@ def getDrvicesID(session):
         print(f"获取cookie: {cookies}")
         if cookies:
             session.httpClint.set_cookies(cookies)
+            session.cookies = cookies
         print("cookie获取完成")
     elif TickerConfig.COOKIE_TYPE is 2:
         request_device_id(session)
+    elif TickerConfig.COOKIE_TYPE is 3:
+        # RAIL_DEVICEID,RAIL_EXPIRATION的值打开12306官网可以获取headers-Cookies
+        if not TickerConfig.RAIL_DEVICEID or not TickerConfig.RAIL_EXPIRATION:
+            print("警告！！: RAIL_DEVICEID,RAIL_EXPIRATION的值为空，请手动打开12306官网可以获取headers-Cookies中的RAIL_DEVICEID,RAIL_EXPIRATION，填入配置文件中")
+        cookies = [{
+            "RAIL_DEVICEID": TickerConfig.RAIL_DEVICEID,
+            "RAIL_EXPIRATION": TickerConfig.RAIL_EXPIRATION,
+        }]
+        session.httpClint.set_cookies(cookies)
+        session.cookies = cookies
 
 
 def request_device_id(session):
@@ -48,6 +58,10 @@ def request_device_id(session):
                 'RAIL_EXPIRATION': result.get('exp'),
                 'RAIL_DEVICEID': result.get('dfp'),
             }])
+            session.cookies = [{
+                'RAIL_EXPIRATION': result.get('exp'),
+                'RAIL_DEVICEID': result.get('dfp'),
+            }]
         except:
             return False
 
